@@ -41,6 +41,9 @@ func (l *Local) newSocks5UDPForwarder(proxy *UDPProxy, clientAddr *net.UDPAddr, 
 	if l.socks5Addr == "" {
 		return nil, fmt.Errorf("SOCKS5 proxy is not configured")
 	}
+	if l.socks5Network != "tcp" {
+		return nil, fmt.Errorf("SOCKS5 UDP ASSOCIATE over %s proxy transport is unsupported", l.socks5Network)
+	}
 	destUDPAddr, err := net.ResolveUDPAddr("udp", destAddr)
 	if err != nil {
 		return nil, fmt.Errorf("resolve UDP destination %q: %w", destAddr, err)
