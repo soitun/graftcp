@@ -61,7 +61,8 @@ Usage: graftcp [-hn] [-b value] [--config value] [--disable-dns] [--disable-udp]
                     Set the mode for select a proxy [auto | random |
                     only_http_proxy | only_socks5 | direct] [auto]
      --socks5=value
-                    SOCKS5 address [127.0.0.1:1080]
+                    SOCKS5 address, e.g.: 127.0.0.1:1080 or
+                    unix:/path/tor.sock [127.0.0.1:1080]
      --socks5_password=value
                     SOCKS5 password
      --socks5_username=value
@@ -78,6 +79,7 @@ Examples:
 
 ```sh
 ./local/graftcp --socks5 127.0.0.1:1080 curl https://example.com
+./local/graftcp --select_proxy_mode only_socks5 --socks5 unix:/path/tor.sock curl https://example.com
 ./local/graftcp --enable-dns --dns-server 1.1.1.1:53 curl https://example.com
 ./local/graftcp --enable-udp --socks5 127.0.0.1:1080 your-udp-client
 ./local/graftcp --http_proxy 127.0.0.1:8080 git clone https://github.com/hmgle/graftcp.git
@@ -127,6 +129,7 @@ When generic UDP proxying is enabled, `graftcp` starts a separate UDP listener. 
 - DNS proxying is disabled by default. Use `--enable-dns` to enable the UDP/53 DNS-over-TCP path, and `--dns-server` to choose the upstream server.
 - Generic UDP proxying is disabled by default. Use `--enable-udp` to enable it.
 - HTTP proxy mode does not support generic UDP. `auto` prefers SOCKS5 UDP when available and falls back to direct UDP if the SOCKS5 UDP association fails; `only_http_proxy` rejects generic UDP sessions.
+- SOCKS5 can use a TCP endpoint (`127.0.0.1:1080`) or a Unix socket endpoint (`unix:/path/tor.sock` or `/path/tor.sock`) for TCP CONNECT traffic. SOCKS5 UDP ASSOCIATE still requires a TCP SOCKS5 endpoint.
 - DNS proxying has precedence over generic UDP for UDP/53 when both are enabled.
 - The proxy configuration file covers proxy endpoints and the common routing flags. CLI flags still override config values.
 - TCP and UDP syscall address buffers are restored after `connect()` / `sendto()` / `sendmsg()` returns on a best-effort basis; clients that require `recvfrom()` to report the original remote address may still not be fully transparent.

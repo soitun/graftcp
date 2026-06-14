@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/net/proxy"
@@ -42,6 +43,7 @@ type Local struct {
 	socks5Dialer    proxy.Dialer
 	httpProxyDialer proxy.Dialer
 	directDialer    proxy.Dialer
+	socks5Network   string
 	socks5Addr      string
 	socks5Username  string
 	socks5Password  string
@@ -58,6 +60,50 @@ type timeoutDialer struct {
 
 func (d timeoutDialer) Dial(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, d.timeout)
+}
+
+type socks5ProxyEndpoint struct {
+	network string
+	address string
+}
+
+func (e socks5ProxyEndpoint) String() string {
+	if e.network == "unix" {
+		return "unix:" + e.address
+	}
+	return e.address
+}
+
+func resolveSocks5ProxyEndpoint(addr string) (socks5ProxyEndpoint, error) {
+	if path, ok := socks5UnixSocketPath(addr); ok {
+		unixAddr, err := net.ResolveUnixAddr("unix", path)
+		if err != nil {
+			return socks5ProxyEndpoint{}, err
+		}
+		if unixAddr.Name == "" {
+			return socks5ProxyEndpoint{}, fmt.Errorf("empty unix socket path")
+		}
+		return socks5ProxyEndpoint{network: "unix", address: unixAddr.Name}, nil
+	}
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return socks5ProxyEndpoint{}, err
+	}
+	return socks5ProxyEndpoint{network: "tcp", address: tcpAddr.String()}, nil
+}
+
+func socks5UnixSocketPath(addr string) (string, bool) {
+	switch {
+	case strings.HasPrefix(addr, "unix://"):
+		return strings.TrimPrefix(addr, "unix://"), true
+	case strings.HasPrefix(addr, "unix:"):
+		return strings.TrimPrefix(addr, "unix:"), true
+	case strings.HasPrefix(addr, "/"):
+		return addr, true
+	default:
+		return "", false
+	}
 }
 
 // GetFAddr return faddrString and faddr of l.
@@ -115,6 +161,7 @@ func (l *Local) ConfigureProxy(socks5Addr, socks5Username, socks5PassWord, httpP
 // ConfigureSOCKS5 installs (or clears) the SOCKS5 dialer.
 func (l *Local) ConfigureSOCKS5(addr, username, password string) error {
 	l.socks5Dialer = nil
+	l.socks5Network = ""
 	l.socks5Addr = ""
 	l.socks5Username = ""
 	l.socks5Password = ""
@@ -122,7 +169,7 @@ func (l *Local) ConfigureSOCKS5(addr, username, password string) error {
 	if addr == "" {
 		return nil
 	}
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	endpoint, err := resolveSocks5ProxyEndpoint(addr)
 	if err != nil {
 		return fmt.Errorf("resolve socks5 proxy %q: %w", addr, err)
 	}
@@ -134,12 +181,13 @@ func (l *Local) ConfigureSOCKS5(addr, username, password string) error {
 	if forward == nil {
 		forward = timeoutDialer{timeout: tcpDialTimeout}
 	}
-	dialer, err := proxy.SOCKS5("tcp", tcpAddr.String(), auth, forward)
+	dialer, err := proxy.SOCKS5(endpoint.network, endpoint.address, auth, forward)
 	if err != nil {
-		return fmt.Errorf("create SOCKS5 proxy %q: %w", tcpAddr.String(), err)
+		return fmt.Errorf("create SOCKS5 proxy %q: %w", endpoint.String(), err)
 	}
 	l.socks5Dialer = dialer
-	l.socks5Addr = tcpAddr.String()
+	l.socks5Network = endpoint.network
+	l.socks5Addr = endpoint.address
 	l.socks5Username = username
 	l.socks5Password = password
 	return nil

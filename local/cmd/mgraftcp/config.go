@@ -54,7 +54,7 @@ func defaultConfig() appConfig {
 func (c *appConfig) registerFlags() {
 	getopt.FlagLong(&c.httpProxyAddr, "http_proxy", 0, "http proxy address, e.g.: 127.0.0.1:8080")
 	getopt.FlagLong(&c.selectProxyMode, "select_proxy_mode", 0, "Set the mode for select a proxy [auto | random | only_http_proxy | only_socks5 | direct]")
-	getopt.FlagLong(&c.socks5Addr, "socks5", 0, "SOCKS5 address")
+	getopt.FlagLong(&c.socks5Addr, "socks5", 0, "SOCKS5 address, e.g.: 127.0.0.1:1080 or unix:/path/tor.sock")
 	getopt.FlagLong(&c.socks5User, "socks5_username", 0, "SOCKS5 username")
 	getopt.FlagLong(&c.socks5Pwd, "socks5_password", 0, "SOCKS5 password")
 	getopt.FlagLong(&c.dnsProxy, "enable-dns", 0, "Enable DNS proxy for UDP/53 queries")
