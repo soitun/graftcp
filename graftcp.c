@@ -708,8 +708,6 @@ static bool rewrite_udp_sockaddr(struct proc_info *pinfp, long addr,
 		}
 		if (!ok) {
 			fprintf(stderr, "graftcp rewrite DNS UDP failed\n");
-		} else {
-			save_sockaddr_restore(pinfp, addr, &dest.sa, dest.len);
 		}
 		return true;
 	}
