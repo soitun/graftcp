@@ -116,7 +116,7 @@ Config keys mirror the CLI flags: `dns_proxy = true` -> `--enable-dns`, `udp_pro
 
 For IPv6 `connect(2)`, `graftcp` rewrites to an IPv4-mapped loopback address (`::ffff:127.x.y.z`) so the same token registry can be reused.
 
-When DNS proxying is enabled, `graftcp` also starts an embedded UDP DNS listener. UDP `connect()` and `sendto()` calls to port 53 are rewritten to that listener, and each DNS payload is forwarded to the configured upstream DNS server over TCP through the same proxy selection path.
+When DNS proxying is enabled, `graftcp` also starts an embedded UDP DNS listener. UDP `connect()` and `sendto()` calls to port 53 are rewritten to that listener, and each DNS payload is forwarded to the configured upstream DNS server over TCP through the same proxy selection path. DNS sockaddr rewrites are intentionally left in place after the syscall returns so resolvers such as musl, which validate replies against the send-side sockaddr buffer, continue to see the embedded DNS proxy as the expected peer.
 
 When generic UDP proxying is enabled, `graftcp` starts a separate UDP listener. UDP `connect()`, `sendto()`, and `sendmsg()` targets are rewritten to loopback token endpoints; the embedded listener maps each token back to the original destination and forwards packets through SOCKS5 UDP ASSOCIATE when SOCKS5 is selected, or direct UDP in `direct` mode and fallback cases.
 
@@ -132,7 +132,7 @@ When generic UDP proxying is enabled, `graftcp` starts a separate UDP listener. 
 - SOCKS5 can use a TCP endpoint (`127.0.0.1:1080`) or a Unix socket endpoint (`unix:/path/tor.sock` or `/path/tor.sock`) for TCP CONNECT traffic. SOCKS5 UDP ASSOCIATE still requires a TCP SOCKS5 endpoint.
 - DNS proxying has precedence over generic UDP for UDP/53 when both are enabled.
 - The proxy configuration file covers proxy endpoints and the common routing flags. CLI flags still override config values.
-- TCP and UDP syscall address buffers are restored after `connect()` / `sendto()` / `sendmsg()` returns on a best-effort basis; clients that require `recvfrom()` to report the original remote address may still not be fully transparent.
+- TCP and generic UDP syscall address buffers are restored after `connect()` / `sendto()` / `sendmsg()` returns on a best-effort basis; DNS proxy rewrites are kept in place for resolver source-address checks. Clients that require `recvfrom()` to report the original remote address may still not be fully transparent.
 - IPv6 is intentionally simplified to the IPv4-mapped loopback path; sockets that require `IPV6_V6ONLY=1` are out of scope by design.
 - Socket tracking is best-effort and keyed by traced pid/fd state. `dup*` and `fcntl(F_DUPFD*)` are copied best-effort, but `close_range()`, `unshare(CLONE_FILES)`, and full shared fd-table semantics are intentionally not modeled.
 - Loopback-token registrations are reclaimed on accept or by idle cleanup, not on every failed or abandoned connect.
