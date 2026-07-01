@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.8.2] - 2026-07-01
+
+### Added
+
+- SOCKS5 proxy endpoints can now use Unix sockets for TCP CONNECT traffic, for example `unix:/path/tor.sock`.
+
+### Fixed
+
+- Keep DNS proxy sockaddr rewrites in place after `sendto()` returns so musl-based resolvers can validate DNS replies when DNS proxying is enabled, fixing issue #90.
+
 ## [v0.8.1] - 2026-06-07
 
 ### Added
