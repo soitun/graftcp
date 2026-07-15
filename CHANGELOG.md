@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.8.3] - 2026-07-15
+
+### Fixed
+
+- Build release packages with the requested target architecture instead of
+  silently falling back to the host compiler.
+- Verify the binary architecture before creating release packages.
+
 ## [v0.8.2] - 2026-07-01
 
 ### Added

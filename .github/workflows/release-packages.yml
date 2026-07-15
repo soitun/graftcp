@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to package, for example v0.8.2
+        description: Tag to package, for example v0.8.3
         required: true
-        default: v0.8.2
+        default: v0.8.3
       upload_to_release:
         description: Upload built packages to the GitHub release
         type: boolean
