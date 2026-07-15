@@ -34,9 +34,9 @@ endif
 
 CROSS_COMPILE ?=
 
-CC ?= $(CROSS_COMPILE)gcc
-CXX ?= $(CROSS_COMPILE)g++
-AR ?= $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+CXX = $(CROSS_COMPILE)g++
+AR = $(CROSS_COMPILE)ar
 ARFLAGS ?= rcs
 GO ?= go
 
