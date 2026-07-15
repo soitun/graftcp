@@ -20,6 +20,31 @@ else
 	make VERSION="$version" all
 fi
 
+binary="local/graftcp"
+elf_description="$(file -b "$binary")"
+case "$target" in
+	linux-amd64)
+		expected_machine='x86-64'
+		;;
+	linux-arm64)
+		expected_machine='ARM aarch64'
+		;;
+	linux-armv7)
+		expected_machine='ARM'
+		;;
+	linux-386)
+		expected_machine='Intel 80386'
+		;;
+	*)
+		echo "unsupported release target: $target" >&2
+		exit 1
+		;;
+esac
+if [[ "$elf_description" != *"$expected_machine"* ]]; then
+	echo "built $target package contains an unexpected binary: $elf_description" >&2
+	exit 1
+fi
+
 install -m 0755 local/graftcp "$pkgroot/usr/bin/graftcp"
 ln -s graftcp "$pkgroot/usr/bin/mgraftcp"
 install -m 0644 COPYING README.md README.zh-CN.md CHANGELOG.md "$pkgroot/usr/share/doc/graftcp/"
